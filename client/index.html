@@ -1,4 +1,4 @@
-<!doctype html>
+`<!doctype html>
 <html>
   <head>
     <meta charset="utf-8">
@@ -15,10 +15,17 @@
   <body>
     <div id="main">
       <h1>chatterbox</h1>
+      <form action='#' method='POST' id='new-room'>
+        <input type="text" name='roomname' id="room-value">
+        <input type="submit" value='create a room'>
+      </form>
+      <ul id="roomSelect">
+      </ul>
       <form action='#' method='POST' id='send'>
         <input type="text" name='text' id="message-value">
         <input type="submit" value='Send Message'>
       </form>
+      <a href="#" id="load-messages">load new messages</a>
       <div id="chats"></div>
     </div>
   </body>
