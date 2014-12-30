@@ -1,5 +1,9 @@
 var app = {}
 
+var query = window.location.search;
+app.username = _.escape(query.substring(query.indexOf('=') + 1, query.length));
+app.userFriends = [];
+
 app.server = 'https://api.parse.com/1/classes/chatterbox'
 
 app.init = function(){
@@ -37,7 +41,7 @@ app.fetch = function(){
 }
 
 app.addAllMessages = function(data){
-  _.each(data.results, app.addMessage);
+  _.each(data.results.reverse(), app.addMessage);
 }
 
 app.clearMessages = function(){
@@ -45,9 +49,14 @@ app.clearMessages = function(){
 }
 
 app.addMessage = function(message) {
-  var temp = _.template("<div> <span><strong><%- username %></strong> : </span> <%- chatMessage %>  </div>");
-  var appendee = temp({username: message.username, chatMessage: message.text});
-  $("#chats").append(appendee);
+  var temp = _.template("<div> <span class='username'><%- username %>: </span> <%- chatMessage %>  </div>");
+  _.each(app.userFriends, function(username) {
+    if (message['username'] === username) {
+      temp = _.template("<div> <span class='username'><strong><%- username %>:</strong> </span> <%- chatMessage %>  </div>");
+    }
+  });
+  var messageToAdd = temp({username: message.username, chatMessage: message.text});
+  $("#chats").prepend(messageToAdd);
 }
 
 app.refreshMessageList = function(){
@@ -57,26 +66,30 @@ app.refreshMessageList = function(){
   }, 5000);
 }
 
-app.triggerSend = function(e) {
+app.handleSubmit = function(e) {
   e.preventDefault();
-  // var indexLetter = window.location.search.search(/[=]/gi) + 1
-  // var username = window.location.search.substring(indexLetter);
-// http://stackoverflow.com/questions/2090551/parse-query-string-in-javascript
-  // var username = window.location.search.gsub(/username=()/, '');
-  var messageText = e.target[0].value;
-  app.addMessage({username: "username", text: messageText});
-  app.send({username: "username", text: messageText, roomname: "roomname"})
+  var messageText = $("#send input").val()
+  app.addMessage({username: app.username, text: messageText});
+  app.send({username: app.username, text: messageText, roomname: "roomname"});
+  $("#send input#message-value").val("");
 };
 
 app.cleanMessage = function(message){
-  message['username'] = _.escape(message.username);
+  message['username'] = app.username;
   message['text'] = _.escape(message.text);
   message['roomname'] = _.escape(message.roomname);
   return message;
 }
 
+app.addFriend = function(e) {
+  e.preventDefault();
+  var friendUsername = e.target.innerText.substring(0, e.target.innerText.length - 2);
+  app.userFriends.push(friendUsername);
+}
+
 app.bindEvents = function() {
-  $('#message-form').on('submit', app.triggerSend);
+  $(document).on('submit', '#send', app.handleSubmit);
+  $(document).on('click', '.username', app.addFriend);
 };
 
 $(function() {
